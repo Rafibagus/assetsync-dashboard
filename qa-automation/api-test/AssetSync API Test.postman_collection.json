@@ -1,0 +1,207 @@
+{
+  "info": {
+    "_postman_id": "67257ca1-85f9-4726-9f11-e99e9e4caae0",
+    "name": "AssetSync API Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "27842145"
+  },
+  "item": [
+    {
+      "name": "1. [GET] Get All Items - Positive",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Memastikan server merespons dengan status sukses (200 OK)\r",
+              "pm.test(\"Status code is 200 (Sukses)\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// 2. Memastikan format balasan adalah array (daftar) dan merespons cukup cepat\r",
+              "pm.test(\"Data yang dikembalikan berupa Array\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Waktu respons kurang dari 500ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/items",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "items"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. [POST] Add Item - Positive",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Memastikan statusnya 201 (Berhasil Dibuat/Created)\r",
+              "pm.test(\"Status code is 201 (Created)\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// 2. Memvalidasi bahwa data yang tersimpan benar-benar sesuai dengan inputan kita\r",
+              "pm.test(\"Nama barang dan harga tersimpan dengan benar\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Mengecek spesifik nilainya\r",
+              "    pm.expect(jsonData.name).to.eql(\"Keyboard Mechanical API\");\r",
+              "    pm.expect(jsonData.category).to.eql(\"Elektronik\");\r",
+              "});\r",
+              "\r",
+              "// 3. Memastikan sistem otomatis membuat ID untuk barang baru\r",
+              "pm.test(\"Sistem berhasil men-generate ID\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.id).to.not.be.undefined;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Keyboard Mechanical API\",\r\n    \"category\": \"Elektronik\",\r\n    \"stock\": 25,\r\n    \"price\": 150000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/items",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "items"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. [POST] Add Item Invalid - Negative",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 1. Memastikan server menolak request (Status 422 Unprocessable Entity bawaan Laravel)\r",
+              "pm.test(\"Status code is 422 (Ditolak karena validasi gagal)\", function () {\r",
+              "    pm.response.to.have.status(422);\r",
+              "});\r",
+              "\r",
+              "// 2. Memastikan server mengembalikan pesan error yang jelas\r",
+              "pm.test(\"Mendapatkan struktur error validasi\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Harus ada objek 'errors' di dalam respons\r",
+              "    pm.expect(jsonData).to.have.property('errors');\r",
+              "});\r",
+              "\r",
+              "// 3. Memastikan error spesifik untuk kolom yang salah benar-benar muncul\r",
+              "pm.test(\"Validasi mendeteksi nama kosong dan harga minus\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Mengecek apakah error untuk 'name' terdeteksi\r",
+              "    pm.expect(jsonData.errors).to.have.property('name');\r",
+              "    \r",
+              "    // Mengecek apakah error untuk 'price' terdeteksi\r",
+              "    pm.expect(jsonData.errors).to.have.property('price');\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"category\": \"Elektronik\",\r\n    \"stock\": 10,\r\n    \"price\": -50000 \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/items",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "items"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
