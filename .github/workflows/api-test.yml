@@ -50,4 +50,4 @@ jobs:
 
       # 8. Mengeksekusi file Postman JSON Anda!
       - name: Run API Tests with Newman
-        run: newman run qa-automation/api-test/AssetSync_API_Test.postman_collection.json
+        run: newman run qa-automation/api-test/qa-automation/api-test/AssetSync API Test.postman_collection.json
