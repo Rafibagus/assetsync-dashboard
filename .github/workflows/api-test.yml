@@ -1,0 +1,53 @@
+name: API Automation Test (CI/CD)
+
+# Robot akan berjalan setiap ada Push ke cabang 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  run-api-tests:
+    name: Run Postman Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Mengambil kode Anda dari GitHub
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Menyiapkan PHP untuk Laravel
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      # 3. Menginstal library yang dibutuhkan Laravel
+      - name: Install Laravel Dependencies
+        run: composer install --quiet --no-interaction --prefer-dist
+
+      # 4. Menyiapkan file .env dan Database (SQLite) agar server bisa menyala
+      - name: Prepare Environment & Database
+        run: |
+          cp .env.example .env
+          touch database/database.sqlite
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      # 5. Menyalakan server Laravel di latar belakang (Background)
+      - name: Start Laravel Server
+        run: php artisan serve &
+        
+      # 6. Menyiapkan Node.js untuk menginstal Newman
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 7. Menginstal Newman (Postman versi Terminal)
+      - name: Install Newman
+        run: npm install -g newman
+
+      # 8. Mengeksekusi file Postman JSON Anda!
+      - name: Run API Tests with Newman
+        run: newman run qa-automation/api-test/AssetSync_API_Test.postman_collection.json
