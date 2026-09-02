@@ -29,6 +29,29 @@ Lokasi Skrip: `qa-automation/api-test/AssetSync_API_Test.postman_collection.json
 - **[Positive] POST `/api/items`:** Menambahkan aset baru. Memverifikasi status `201 Created` dan kecocokan data (*Data Integrity*) yang di-*generate* oleh sistem.
 - **[Negative] POST `/api/items`:** Mengirimkan *payload* kosong dan harga minus. Memverifikasi *server* memblokir *request* dengan status `422 Unprocessable Entity` dan memvalidasi struktur *error*.
 
+### 3. API Performance & Load Testing (Apache JMeter)
+Melakukan pengujian performa dan ketahanan beban pada REST API AssetSync untuk menyimulasikan akses konkuren multi-pengguna pada jam sibuk.
+
+**Skenario Pengujian Beban Baca (GET):**
+- **Target Endpoint:** `GET /api/items` (Mengambil daftar inventaris)
+- **Simulasi Beban:** 50 Concurrent Users (Ramp-Up: 10 detik)
+- **Hasil Pengujian:**
+  - **Success Rate:** 100% (Error Rate: 0.00%)
+  - **Rata-rata Response Time:** 182 ms
+  - **Analisis:** API mampu melayani permintaan baca data secara massal dengan stabil tanpa degradasi performa.
+
+![Hasil Load Testing GET](jmeter-get.png)
+
+**Skenario Pengujian Beban Tulis (POST):**
+- **Target Endpoint:** `POST /api/items` (Menambah data barang baru)
+- **Simulasi Beban:** 50 Concurrent Users (Ramp-Up: 10 detik)
+- **Payload:** Format JSON (`application/json`)
+- **Hasil Pengujian:**
+  - **Success Rate:** 100% (Error Rate: 0.00%)
+  - **Analisis:** Database sanggup menangani *concurrent insert* 50 data baru dalam 10 detik tanpa mengalami *database deadlock* atau HTTP 500 Server Error.
+
+![Hasil Load Testing POST](jmeter-post.png)
+
 ## ⚙️ Cara Menjalankan Proyek & Automasi
 
 ### 1. Menjalankan UI Automation
