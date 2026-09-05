@@ -2,7 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AssetController;
 use App\Models\Item;
+
 
 // 1. Endpoint untuk melihat daftar barang (Akan diuji via Postman dengan method GET)
 Route::get('/items', function () {
@@ -21,4 +24,17 @@ Route::post('/items', function (Request $request) {
 
     $item = Item::create($validated);
     return response()->json($item, 201);
+
 });
+
+// Rute Publik (Akses Login)
+    Route::post('/login', [AuthController::class, 'login']);
+
+    // Rute Terproteksi (Wajib Token Sanctum)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+
+        // Endpoint Asset
+        Route::get('/assets', [AssetController::class, 'index']);
+        Route::get('/assets/scan/{tag}', [AssetController::class, 'scanQr']);
+    });
