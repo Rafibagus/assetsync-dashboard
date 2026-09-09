@@ -42,17 +42,59 @@
                             <select name="status" id="status" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="Available" {{ (old('status', $asset->status) == 'Available') ? 'selected' : '' }}>Available</option>
                                 <option value="Deployed" {{ (old('status', $asset->status) == 'Deployed') ? 'selected' : '' }}>Deployed</option>
-                                <option value="Maintenance" {{ (old('status', $asset->status) == 'Maintenance') ? 'selected' : '' }}>Maintenance</option>
+                                @if($asset->status == 'Maintenance')
+                                    <option value="Maintenance" selected>Maintenance (Sedang Diperbaiki)</option>
+                                @else
+                                    <option value="Maintenance" disabled>Maintenance (Gunakan tombol 'Lapor Rusak')</option>
+                                @endif
                                 <option value="Retired" {{ (old('status', $asset->status) == 'Retired') ? 'selected' : '' }}>Retired</option>
                             </select>
                             @error('status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
-                        <!-- Field Tanggal Beli & Harga -->
+                        <!-- Lokasi -->
+                        <div>
+                            <label for="location_id" class="block text-sm font-medium text-gray-700">Lokasi</label>
+                            <select name="location_id" id="location_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="">-- Pilih Lokasi (Opsional) --</option>
+                                @foreach($locations as $location)
+                                    <option value="{{ $location->id }}" {{ (old('location_id', $asset->location_id) == $location->id) ? 'selected' : '' }}>
+                                        {{ $location->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('location_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Departemen -->
+                        <div>
+                            <label for="department_id" class="block text-sm font-medium text-gray-700">Departemen</label>
+                            <select name="department_id" id="department_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="">-- Pilih Departemen (Opsional) --</option>
+                                @foreach($departments as $department)
+                                    <option value="{{ $department->id }}" {{ (old('department_id', $asset->department_id) == $department->id) ? 'selected' : '' }}>
+                                        {{ $department->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('department_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Field Tanggal Beli -->
                         <div>
                             <label for="purchase_date" class="block text-sm font-medium text-gray-700">Tanggal Pembelian</label>
                             <input type="date" name="purchase_date" id="purchase_date" value="{{ old('purchase_date', $asset->purchase_date?->format('Y-m-d')) }}" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                             @error('purchase_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <!-- Input Lama Garansi -->
+                        <div class="mt-4">
+                            <label for="warranty_months" class="block text-sm font-medium text-gray-700">Lama Garansi (Bulan)</label>
+                            <input type="number" name="warranty_months" id="warranty_months" value="{{ old('warranty_months', $asset->warranty_months) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('warranty_months') 
+                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span> 
+                            @enderror
                         </div>
                         <div>
                             <label for="purchase_cost" class="block text-sm font-medium text-gray-700">Harga Beli (Rp)</label>

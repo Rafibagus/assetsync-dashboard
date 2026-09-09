@@ -1,216 +1,251 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Overview') }}
-        </h2>
-    </x-slot>
+    <!-- SUB-HEADER: Filter Global & Aksi -->
+    <div class="bg-white border-b border-gray-200 py-4 px-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 sticky top-0 z-10">
+        <!-- Filter Kiri -->
+        <div class="flex space-x-3 w-full md:w-auto">
+            <select class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 text-gray-700 w-full md:w-40">
+                <option>Juli 2024</option>
+                <option>Juni 2024</option>
+            </select>
+            <!-- Filter Lokasi (Ditambahkan ID) -->
+            <select id="filter-location" name="location_id" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 text-gray-700 w-full md:w-40">
+                <option value="">Semua Lokasi</option>
+                @foreach($locations as $loc)
+                    <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                @endforeach
+            </select>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            
-            <!-- BARIS 1: 4 KOTAK METRIK (Bersebelahan) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col">
-                    <span class="text-sm font-medium text-gray-500">Total Aset</span>
-                    <span class="text-3xl font-bold text-gray-800 mt-2">{{ $totalAssets }}</span>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col">
-                    <span class="text-sm font-medium text-gray-500">Tersedia</span>
-                    <span class="text-3xl font-bold text-green-600 mt-2">{{ $tersedia }}</span>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col">
-                    <span class="text-sm font-medium text-gray-500">Digunakan</span>
-                    <span class="text-3xl font-bold text-blue-600 mt-2">{{ $digunakan }}</span>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col">
-                    <span class="text-sm font-medium text-gray-500">Perawatan</span>
-                    <span class="text-3xl font-bold text-orange-500 mt-2">{{ $perawatan }}</span>
-                </div>
-            </div>
-
-            <!-- BARIS 2: GRAFIK & INSIGHT (Bersebelahan 50% - 50%) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                <!-- Kiri: Grafik Pie -->
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Distribusi Kategori</h3>
-                    <div class="relative h-64 w-full">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Kanan: Insight / Analisa -->
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center space-y-4">
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">Analisa Cepat</h3>
-                    
-                    <div class="p-4 bg-blue-50 text-blue-800 rounded-lg border border-blue-100">
-                        <p class="text-sm"><strong>Total Inventaris:</strong> Sistem mencatat <strong>{{ $totalAssets }} unit</strong> aset secara keseluruhan.</p>
-                    </div>
-                    
-                    <div class="p-4 bg-orange-50 text-orange-800 rounded-lg border border-orange-100">
-                        <p class="text-sm"><strong>Status Perawatan:</strong> Terdapat <strong>{{ $perawatan }} aset</strong> yang sedang dalam masa maintenance/perbaikan.</p>
-                    </div>
-
-                    @if($perawatan > ($totalAssets * 0.1))
-                    <div class="p-4 bg-red-50 text-red-800 rounded-lg border border-red-100">
-                        <p class="text-sm font-semibold">⚠️ Peringatan Kritis</p>
-                        <p class="text-sm mt-1">Lebih dari 10% aset perusahaan sedang rusak. Diperlukan audit segera!</p>
-                    </div>
-                    @else
-                    <div class="p-4 bg-green-50 text-green-800 rounded-lg border border-green-100">
-                        <p class="text-sm font-semibold">✅ Status Aman</p>
-                        <p class="text-sm mt-1">Tingkat kerusakan aset berada di bawah batas normal (kurang dari 10%).</p>
-                    </div>
-                    @endif
-                </div>
-
-            </div>
-
-            <!-- BARIS 3: TABEL ASET TERBARU -->
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">Aset Terbaru</h3>
-                    <a href="{{ route('assets.index') }}" class="text-sm text-blue-600 hover:underline font-medium">Lihat Semua &rarr;</a>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 rounded-l-lg">Tag Aset</th>
-                                <th class="px-4 py-3">Nama Aset</th>
-                                <th class="px-4 py-3">Kategori</th>
-                                <th class="px-4 py-3 rounded-r-lg">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentAssets as $asset)
-                            <tr class="border-b last:border-0 hover:bg-gray-50 transition">
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $asset->asset_tag }}</td>
-                                <td class="px-4 py-3">{{ $asset->name }}</td>
-                                <td class="px-4 py-3">{{ $asset->category->name ?? '-' }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full border 
-                                        {{ $asset->status == 'Available' ? 'bg-green-50 text-green-700 border-green-200' : '' }}
-                                        {{ $asset->status == 'Deployed' ? 'bg-blue-50 text-blue-700 border-blue-200' : '' }}
-                                        {{ $asset->status == 'Maintenance' ? 'bg-orange-50 text-orange-700 border-orange-200' : '' }}
-                                    ">
-                                        {{ $asset->status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="px-4 py-8 text-center text-gray-500">Belum ada data aset.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
+            <!-- Filter Departemen (Ditambahkan ID) -->
+            <select id="filter-department" name="department_id" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 text-gray-700 w-full md:w-40 hidden md:block">
+                <option value="">Semua Departemen</option>
+                @foreach($departments as $dept)
+                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        
+        <!-- Aksi Kanan -->
+        <div class="flex space-x-3 w-full md:w-auto">
+            <a href="{{ route('assets.create') }}" class="bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition flex items-center justify-center w-full md:w-auto">
+                <span class="mr-2">+</span> Tambah Aset Baru
+            </a>
+            <a href="{{ route('assets.audit') }}" class="bg-indigo-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition flex items-center justify-center w-full md:w-auto">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    Buat Audit Aset Kritis
+            </a>
         </div>
     </div>
 
-    <!-- Script Chart.js -->
+    <div class="py-6 bg-gray-50 min-h-screen">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            
+            <!-- BARIS 1: KARTU KPI DENGAN TREN -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-sm font-semibold text-gray-700">Total Aset</span>
+                        <div class="p-2 bg-gray-100 text-gray-500 rounded-md">📦</div>
+                    </div>
+                    <div class="mt-4">
+                        <!-- Tambah ID di sini -->
+                        <span id="kpi-total" class="text-3xl font-bold text-gray-900">{{ number_format($totalAssets) }}</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-sm font-semibold text-gray-700">Aset Tersedia</span>
+                        <div class="p-2 bg-green-50 text-green-500 rounded-md">✅</div>
+                    </div>
+                    <div class="mt-4">
+                         <!-- Tambah ID di sini -->
+                        <span id="kpi-tersedia" class="text-3xl font-bold text-green-600">{{ number_format($tersedia) }}</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <span class="text-sm font-semibold text-gray-700">Aset Digunakan</span>
+                        <div class="p-2 bg-blue-50 text-blue-500 rounded-md">🖥️</div>
+                    </div>
+                    <div class="mt-4">
+                         <!-- Tambah ID di sini -->
+                        <span id="kpi-digunakan" class="text-3xl font-bold text-blue-600">{{ number_format($digunakan) }}</span>
+                    </div>
+                </div>
+
+                <!-- Kartu Kondisi Aset (Revised) -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <span class="text-sm font-semibold text-gray-700">Kondisi Aset (Revised)</span>
+                    <div class="mt-2 space-y-2">
+                        <div class="flex justify-between items-center pb-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-600">Masalah / Rusak:</span>
+                             <!-- Tambah ID di sini -->
+                            <span id="kpi-rusak" class="text-lg font-bold text-red-500">{{ number_format($rusak) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Masuk Perawatan:</span>
+                             <!-- Tambah ID di sini -->
+                            <span id="kpi-rutin" class="text-lg font-bold text-orange-500">{{ number_format($rutin) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BARIS 2: KONTEN UTAMA -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- KOLOM KIRI (Lebar: 2/3) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-base font-bold text-gray-800 mb-4">Tren Perkembangan Aset (6 Bulan Terakhir)</h3>
+                        <div class="relative h-72 w-full"><canvas id="trendChart"></canvas></div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-base font-bold text-gray-800 mb-4">Distribusi Kategori Aset</h3>
+                        <div class="relative h-64 w-full"><canvas id="categoryBarChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- KOLOM KANAN (Lebar: 1/3) -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-bold text-gray-800">Wawasan & Tindakan Kritis</h3>
+                    
+                    <!-- 1. Kartu Peringatan Audit -->
+                    <div class="bg-red-50 p-5 rounded-xl border border-red-200">
+                        <div class="flex items-center space-x-2 text-red-700 font-bold mb-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                            <span>Audit Segera Diperlukan!</span>
+                        </div>
+                        <p class="text-sm text-red-800 mb-4">Lebih dari 10% aset perusahaan terindikasi rusak atau kritis.</p>
+                        <a href="{{ route('assets.audit') }}" class="w-full block text-center bg-white border border-red-300 text-red-700 py-2 rounded-md text-sm font-semibold hover:bg-red-100 transition">Mulai Audit Aset Kritis</a>
+                    </div>
+
+                    <!-- 2. Kartu Garansi (YANG SEMPAT HILANG) -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h4 class="text-sm font-bold text-gray-800 border-b pb-2 mb-3">Aset Habis Garansi Bulan Ini</h4>
+                        <div class="space-y-3">
+                            @forelse($warrantyEndingAssets as $asset)
+                            <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+                                <div>
+                                    <p class="font-semibold text-gray-700">{{ $asset->name }}</p>
+                                    <p class="text-gray-500 text-xs">SN: {{ $asset->asset_tag }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Berakhir pada:</p>
+                                    <span class="text-xs font-bold text-red-600">{{ $asset->expiry_date->translatedFormat('d M Y') }}</span>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="flex items-center space-x-2 text-green-600 bg-green-50 p-2 rounded text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>Bulan ini aman, tidak ada garansi yang kedaluwarsa.</span>
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- 3. Kartu Tiket (DENGAN TOMBOL YANG HILANG) -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h4 class="text-sm font-bold text-gray-800 border-b pb-2 mb-3">Permintaan Perawatan Baru</h4>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">Tiket Permintaan Pending</p>
+                                @if($pendingTickets->count() > 0)
+                                    <p class="text-xs text-gray-500 mt-1 truncate w-48">
+                                        {{ $pendingTickets->first()->asset->name }} - {{ $pendingTickets->first()->asset->location->name ?? 'Lokasi Umum' }}
+                                    </p>
+                                @else
+                                    <p class="text-xs text-green-600 mt-1">Tidak ada tiket tertunda.</p>
+                                @endif
+                            </div>
+                            <span class="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded">{{ $pendingTickets->count() }} Tiket</span>
+                        </div>
+                        
+                        <a href="{{ route('tickets.index') }}" class="w-full block text-center mt-4 bg-gray-50 border border-gray-200 text-gray-600 py-2 rounded-md text-sm font-semibold hover:bg-gray-100 transition {{ $pendingTickets->count() == 0 ? 'opacity-50 pointer-events-none' : '' }}">
+                            Tinjau Tiket Masuk
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Chart.js & AJAX -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Deklarasi variabel chart di luar agar bisa diupdate oleh AJAX
+        let lineChart, barChart;
+        
+        const trendLabels = {!! json_encode($trendLabels) !!};
+        const rawCategories = {!! json_encode($categories) !!};
+
         document.addEventListener('DOMContentLoaded', function() {
-            const categoriesData = @json($categories);
-            
-            if (categoriesData && categoriesData.length > 0) {
-                const labels = categoriesData.map(cat => cat.name);
-                const dataCounts = categoriesData.map(cat => cat.assets_count);
-                const totalAssetsSum = dataCounts.reduce((a, b) => a + b, 0);
+            // 1. Inisialisasi Line Chart
+            const ctxLine = document.getElementById('trendChart').getContext('2d');
+            lineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [
+                        { label: 'Total Aset', data: {!! json_encode($trendTotal) !!}, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 2, fill: true },
+                        { label: 'Aset Baru', data: {!! json_encode($trendBaru) !!}, borderColor: '#10B981', backgroundColor: '#10B981', borderWidth: 2 },
+                        { label: 'Masuk Perawatan', data: {!! json_encode($trendPerawatan) !!}, borderColor: '#F59E0B', backgroundColor: '#F59E0B', borderWidth: 2 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
 
-                const backgroundColors = ['#3B82F6', '#F59E0B', '#10B981', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6'];
+            // 2. Inisialisasi Bar Chart
+            const ctxBar = document.getElementById('categoryBarChart').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: rawCategories.map(c => c.name),
+                    datasets: [{ label: 'Jumlah Aset', data: rawCategories.map(c => c.assets_count), backgroundColor: '#4F46E5', borderRadius: 4 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
 
-                const ctx = document.getElementById('categoryChart').getContext('2d');
+            // 3. LOGIKA AJAX UNTUK FILTER
+            const locSelect = document.getElementById('filter-location');
+            const deptSelect = document.getElementById('filter-department');
+
+            function fetchFilteredData() {
+                const locId = locSelect.value;
+                const deptId = deptSelect.value;
                 
-                const myChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: dataCounts,
-                            backgroundColor: backgroundColors,
-                            borderWidth: 2,
-                            hoverOffset: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { 
-                                position: 'right',
-                                labels: { boxWidth: 12, font: { size: 11 } }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const value = context.raw;
-                                        const percentage = totalAssetsSum > 0 ? ((value / totalAssetsSum) * 100).toFixed(1) : 0;
-                                        return ` ${context.label}: ${value} unit (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '65%',
-                        // FITUR KLIK INLINE: Filter data langsung di dashboard tanpa pindah halaman
-                        onClick: (event, elements) => {
-                            if (elements.length > 0) {
-                                const index = elements[0].index;
-                                const categoryName = labels[index];
-                                
-                                // Ambil data aset berdasarkan kategori yang diklik via fetch API
-                                fetch(`{{ route('dashboard') }}?category=${encodeURIComponent(categoryName)}`, {
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest'
-                                    }
-                                })
-                                .then(response => response.text())
-                                .then(html => {
-                                    // Parse HTML yang dikembalikan untuk mengambil bagian tabelnya saja
-                                    const parser = new DOMParser();
-                                    const doc = parser.parseFromString(html, 'text/html');
-                                    const newTable = doc.querySelector('#recent-assets-table');
-                                    
-                                    // Ganti isi tabel yang lama dengan data baru hasil filter
-                                    if(newTable) {
-                                        document.querySelector('#recent-assets-table').innerHTML = newTable.innerHTML;
-                                    }
-                                })
-                                .catch(error => console.error('Gagal memuat data:', error));
-                            }
-                        }
-                    },
-                    plugins: [{
-                        id: 'centerText',
-                        beforeDraw(chart) {
-                            const { width, height, ctx } = chart;
-                            ctx.restore();
-                            const fontSize = (height / 110).toFixed(2);
-                            ctx.font = `bold ${fontSize}em sans-serif`;
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = '#1F2937';
+                // Panggil route /dashboard tapi minta data JSON
+                fetch(`/dashboard?location_id=${locId}&department_id=${deptId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Update Angka KPI di layar
+                    document.getElementById('kpi-total').innerText = data.kpi.total;
+                    document.getElementById('kpi-tersedia').innerText = data.kpi.tersedia;
+                    document.getElementById('kpi-digunakan').innerText = data.kpi.digunakan;
+                    document.getElementById('kpi-rusak').innerText = data.kpi.rusak;
+                    document.getElementById('kpi-rutin').innerText = data.kpi.rutin;
 
-                            const text = `${totalAssetsSum}`;
-                            const textSub = 'Total Aset';
-                            
-                            const textX = Math.round((chart.chartArea.left + chart.chartArea.right) / 2);
-                            const textY = Math.round((chart.chartArea.top + chart.chartArea.bottom) / 2) - 8;
-                            
-                            ctx.textAlign = 'center';
-                            ctx.fillText(text, textX, textY);
+                    // Update Grafik Bar (Kategori)
+                    barChart.data.datasets[0].data = data.charts.bar;
+                    barChart.update();
 
-                            ctx.font = `500 11px sans-serif`;
-                            ctx.fillStyle = '#6B7280';
-                            ctx.fillText(textSub, textX, textY + 18);
-                            ctx.save();
-                        }
-                    }]
+                    // Update Grafik Line (Tren)
+                    lineChart.data.datasets[0].data = data.charts.line.total;
+                    lineChart.data.datasets[1].data = data.charts.line.baru;
+                    lineChart.data.datasets[2].data = data.charts.line.perawatan;
+                    lineChart.update();
                 });
             }
+
+            // Jalankan fungsi AJAX setiap kali dropdown diubah
+            locSelect.addEventListener('change', fetchFilteredData);
+            deptSelect.addEventListener('change', fetchFilteredData);
         });
     </script>
 </x-app-layout>

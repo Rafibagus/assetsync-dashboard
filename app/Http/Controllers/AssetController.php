@@ -45,14 +45,22 @@ class AssetController extends Controller
                     $showUrl   = route('assets.show', $row->id);
                     $editUrl   = route('assets.edit', $row->id);
                     $deleteUrl = route('assets.destroy', $row->id);
+                    $reportUrl = route('tickets.create', $row->id); // Rute Lapor Rusak
 
-                    // Menambahkan properti margin-right (mr-4) agar tombol tidak berdempetan
-                    return '
-                        <a href="' . $showUrl . '" style="color: #4f46e5; font-weight: 600; margin-right: 12px; text-decoration: none;">Detail</a>
-                        <a href="' . $editUrl . '" style="color: #0284c7; font-weight: 600; margin-right: 12px; text-decoration: none;">Edit</a>
-                        <button type="button" onclick="confirmDelete(\'' . $deleteUrl . '\')" style="color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Hapus</button>
-                    ';
-                })
+                    // Tombol bawaan
+                    $detailBtn = '<a href="' . $showUrl . '" style="color: #4f46e5; font-weight: 600; margin-right: 12px; text-decoration: none;">Detail</a>';
+                    $editBtn   = '<a href="' . $editUrl . '" style="color: #0284c7; font-weight: 600; margin-right: 12px; text-decoration: none;">Edit</a>';
+                    $deleteBtn = '<button type="button" onclick="confirmDelete(\'' . $deleteUrl . '\')" style="color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none; margin-right: 12px;">Hapus</button>';
+                    
+                    // Tombol Lapor Rusak (Hanya muncul jika status BUKAN Maintenance)
+                    $reportBtn = '';
+                    if ($row->status !== 'Maintenance') {
+                        $reportBtn = '<a href="' . $reportUrl . '" style="color: #ea580c; font-weight: 600; text-decoration: none;">Lapor Rusak</a>';
+                    }
+
+                    // Gabungkan semua tombol dalam satu container flex
+                    return '<div style="display: flex; align-items: center;">' . $detailBtn . $editBtn . $deleteBtn . $reportBtn . '</div>';
+                })  
                 ->rawColumns(['status', 'action'])
                 ->make(true);
         }
@@ -64,11 +72,13 @@ class AssetController extends Controller
      * Menampilkan form untuk registrasi aset baru.
      */
     public function create()
-    {
-        $categories = Category::orderBy('name', 'asc')->get();
-
-        return view('assets.create', compact('categories'));
-    }
+        {
+            $categories = \App\Models\Category::all();
+            $locations = \App\Models\Location::all();
+            $departments = \App\Models\Department::all();
+            
+            return view('assets.create', compact('categories', 'locations', 'departments'));
+        }
 
     /**
      * Menyimpan data aset baru ke database.
@@ -98,11 +108,15 @@ class AssetController extends Controller
      * Menampilkan form untuk mengedit data aset.
      */
     public function edit(Asset $asset)
-    {
-        $categories = Category::orderBy('name', 'asc')->get();
+        {
+            $categories = \App\Models\Category::all();
+            $locations = \App\Models\Location::all();
+            $departments = \App\Models\Department::all();
+            
+            return view('assets.edit', compact('asset', 'categories', 'locations', 'departments'));
+        }
 
-        return view('assets.edit', compact('asset', 'categories'));
-    }
+    
 
     /**
      * Memperbarui data aset di database.
@@ -157,4 +171,14 @@ class AssetController extends Controller
             ->route('assets.index')
             ->with('success', "Aset {$tag} berhasil dihapus!");
     }
+    public function audit()
+{
+    // Mengambil aset yang statusnya 'Maintenance' (Kritis/Rusak)
+    $criticalAssets = \App\Models\Asset::with('category')
+                        ->where('status', 'Maintenance')
+                        ->latest()
+                        ->get();
+
+    return view('assets.audit', compact('criticalAssets'));
+}
 }

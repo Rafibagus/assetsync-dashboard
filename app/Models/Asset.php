@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asset extends Model
 {
@@ -15,6 +16,8 @@ class Asset extends Model
         'asset_tag',
         'name',
         'category_id',
+        'location_id',
+        'departemen_id',
         'purchase_date',
         'purchase_cost',
         'warranty_months',
@@ -48,5 +51,19 @@ class Asset extends Model
     public function scopeAvailable($query)
     {
         return $query->where('status', 'Available');
+    }
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function maintenanceTickets(): HasMany
+    {
+        return $this->hasMany(MaintenanceTicket::class);
     }
 }
